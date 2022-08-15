@@ -12,9 +12,9 @@ const key = process.env.API_KEY;
 
 // Homepage avec tous les jeux
 
-app.get("/", async (req, res) => {
+app.get("/home", async (req, res) => {
   try {
-    const url = `https://api.rawg.io/api/games?key=${key}`;
+    const url = `https://api.rawg.io/api/games?key=${key}&dates=2021-01-01,2022-12-30`;
     const response = await axios.get(url);
     res.status(200).json(response.data);
   } catch (error) {
