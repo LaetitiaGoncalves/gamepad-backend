@@ -12,9 +12,9 @@ const key = process.env.API_KEY;
 
 // Homepage avec tous les jeux
 
-app.get("/home", async (req, res) => {
+app.get("/game", async (req, res) => {
   try {
-    const url = `https://api.rawg.io/api/games?key=${key}&dates=2021-01-01,2022-12-30`;
+    const url = `https://api.rawg.io/api/games?key=${key}&dates=2022-01-01,2022-12-30`;
     const response = await axios.get(url);
     res.status(200).json(response.data);
   } catch (error) {
@@ -24,13 +24,25 @@ app.get("/home", async (req, res) => {
 
 // Route detail d'un jeu
 
-app.get("/games/:id", async (req, res) => {
+app.get("/game/:id", async (req, res) => {
   try {
-    const url = `https://api.rawg.io/api/games/${id}?key=${key}`;
+    const url = `https://api.rawg.io/api/games/${req.params.id}?key=${key}`;
+    const response = await axios.get(url);
+    res.status(200).json(response.data);
+    console.log(response.data);
+  } catch (error) {
+    res.status(400).json("route of the game not found");
+  }
+});
+
+// Route jeux de la même série
+app.get("/samegames/:id", async (req, res) => {
+  try {
+    const url = `https://api.rawg.io/api/games/${req.params.id}/game-series?key=${key}`;
     const response = await axios.get(url);
     res.status(200).json(response.data);
   } catch (error) {
-    res.status(400).json("route of the game not found");
+    res.status(400).json("route of same games not found");
   }
 });
 
