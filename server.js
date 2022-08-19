@@ -14,6 +14,10 @@ app.use(cors());
 
 mongoose.connect(process.env.MONGODB_URL);
 
+const convertToBase64 = (file) => {
+  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+};
+
 app.use(express.json());
 
 const User = require("./models/User");
@@ -23,25 +27,6 @@ cloudinary.config({
   api_key: process.env.API_KEY_CLOUD,
   api_secret: process.env.API_SECRET,
 });
-
-const convertToBase64 = (file) => {
-  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
-};
-const isAuthenticated = async (req, res, next) => {
-  if (req.headers.authorization) {
-    const user = await User.findOne({
-      token: req.headers.authorization.replace("Bearer ", ""),
-    });
-    if (user) {
-      req.user = user;
-      next();
-    } else {
-      res.status(401).json({ error: "Token non valide !" });
-    }
-  } else {
-    res.status(401).json({ error: "Token non envoyé !" });
-  }
-};
 
 // Homepage avec tous les jeux
 
@@ -81,41 +66,37 @@ app.get("/samegames/:id", async (req, res) => {
 
 // Création d'un user
 
-app.post("/signup", isAuthenticated, fileUpload(), async (req, res) => {
+app.post("/signup", fileUpload(), async (req, res) => {
   try {
-    if (req.body.username === undefined) {
-      res.status(400).json({ message: "Missing parameters" });
+    // if (req.body.username === undefined) {
+    //   res.status(400).json({ message: "Missing parameters" });
+    // } else {
+    const isEmailAlreadyinDB = await User.findOne({ email: req.body.email });
+    if (isEmailAlreadyinDB !== null) {
+      res.json({ message: "This email already has an account" });
     } else {
-      const isEmailAlreadyinDB = await User.findOne({ email: req.body.email });
-      if (isEmailAlreadyinDB !== null) {
-        res.json({ message: "This email already has an account" });
-      } else {
-        const salt = uid2(16);
-        const hash = SHA256(req.body.password + salt).toString(encBase64);
-        const token = uid2(32);
+      const salt = uid2(16);
+      const hash = SHA256(req.body.password + salt).toString(encBase64);
+      const token = uid2(32);
 
-        const newUser = new User({
-          email: req.body.email,
-          username: req.body.username,
-          token: token,
-          hash: hash,
-          salt: salt,
-        });
+      const newUser = new User({
+        email: req.body.email,
+        username: req.body.username,
+        avatar: req.files.avatar,
+        token: token,
+        hash: hash,
+        salt: salt,
+      });
+      const result = await cloudinary.uploader.upload(
+        convertToBase64(req.files.avatar)
+      );
+      newUser.avatar = result;
 
-        const result = await cloudinary.uploader.upload(
-          convertToBase64(req.files.avatar),
-          {
-            folder: "/signup",
-            public_id: `${req.body.username} - ${newUser._id}`,
-          }
-        );
+      await newUser.save();
 
-        newUser.avatar = result;
-
-        await newUser.save();
-        res.json(newUser);
-      }
+      res.json(newUser);
     }
+    // }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
