@@ -56,7 +56,7 @@ app.get("/samegames/:id", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   try {
-    if (req.body.account.username === undefined) {
+    if (req.body.username === undefined) {
       res.status(400).json({ message: "Missing parameters" });
     } else {
       const isEmailAlreadyinDB = await User.findOne({ email: req.body.email });
@@ -69,10 +69,8 @@ app.post("/signup", async (req, res) => {
 
         const newUser = new User({
           email: req.body.email,
-          account: {
-            username: req.body.username,
-            // avatar: req.body.avatar,
-          },
+          username: req.body.username,
+          // avatar: req.body.avatar,
           token: token,
           hash: hash,
           salt: salt,
