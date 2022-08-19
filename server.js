@@ -12,6 +12,8 @@ require("dotenv").config();
 const app = express();
 app.use(cors());
 
+const key = process.env.API_KEY;
+
 mongoose.connect(process.env.MONGODB_URL);
 
 const convertToBase64 = (file) => {
