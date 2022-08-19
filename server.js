@@ -70,34 +70,30 @@ app.get("/samegames/:id", async (req, res) => {
 
 app.post("/signup", fileUpload(), async (req, res) => {
   try {
-    if (req.body.username === undefined) {
-      res.status(400).json({ message: "Missing parameters" });
+    const isEmailAlreadyinDB = await User.findOne({ email: req.body.email });
+    if (isEmailAlreadyinDB !== null) {
+      res.json({ message: "This email already has an account" });
     } else {
-      const isEmailAlreadyinDB = await User.findOne({ email: req.body.email });
-      if (isEmailAlreadyinDB !== null) {
-        res.json({ message: "This email already has an account" });
-      } else {
-        const salt = uid2(16);
-        const hash = SHA256(req.body.password + salt).toString(encBase64);
-        const token = uid2(32);
+      const salt = uid2(16);
+      const hash = SHA256(req.body.password + salt).toString(encBase64);
+      const token = uid2(32);
 
-        const newUser = new User({
-          email: req.body.email,
-          username: req.body.username,
-          avatar: req.files.avatar,
-          token: token,
-          hash: hash,
-          salt: salt,
-        });
-        const result = await cloudinary.uploader.upload(
-          convertToBase64(req.files.avatar)
-        );
-        newUser.avatar = result;
+      const newUser = new User({
+        email: req.body.email,
+        username: req.body.username,
+        avatar: req.files.avatar,
+        token: token,
+        hash: hash,
+        salt: salt,
+      });
+      const result = await cloudinary.uploader.upload(
+        convertToBase64(req.files.avatar)
+      );
+      newUser.avatar = result;
 
-        await newUser.save();
+      await newUser.save();
 
-        res.json(newUser);
-      }
+      res.json(newUser);
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
