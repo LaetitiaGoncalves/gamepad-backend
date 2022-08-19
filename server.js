@@ -27,6 +27,21 @@ cloudinary.config({
 const convertToBase64 = (file) => {
   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
 };
+const isAuthenticated = async (req, res, next) => {
+  if (req.headers.authorization) {
+    const user = await User.findOne({
+      token: req.headers.authorization.replace("Bearer ", ""),
+    });
+    if (user) {
+      req.user = user;
+      next();
+    } else {
+      res.status(401).json({ error: "Token non valide !" });
+    }
+  } else {
+    res.status(401).json({ error: "Token non envoyé !" });
+  }
+};
 
 // Homepage avec tous les jeux
 
@@ -66,7 +81,7 @@ app.get("/samegames/:id", async (req, res) => {
 
 // Création d'un user
 
-app.post("/signup", fileUpload(), async (req, res) => {
+app.post("/signup", isAuthenticated, fileUpload(), async (req, res) => {
   try {
     if (req.body.username === undefined) {
       res.status(400).json({ message: "Missing parameters" });
@@ -88,7 +103,7 @@ app.post("/signup", fileUpload(), async (req, res) => {
         });
 
         const result = await cloudinary.uploader.upload(
-          convertToBase64(req.files.picture),
+          convertToBase64(req.files.avatar),
           {
             folder: "/signup",
             public_id: `${req.body.username} - ${newUser._id}`,
