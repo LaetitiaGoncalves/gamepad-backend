@@ -14,6 +14,8 @@ mongoose.connect(process.env.MONGODB_URL);
 
 app.use(express.json());
 
+const User = require("./models/User");
+
 const key = process.env.API_KEY;
 
 // Homepage avec tous les jeux
@@ -103,7 +105,7 @@ app.post("/login", async (req, res) => {
         res.json({
           _id: userToCheck._id,
           token: userToCheck.token,
-          account: userToCheck.account,
+          username: userToCheck.username,
         });
       } else {
         res.status(400).json({ message: "Unauthorized" });
