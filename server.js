@@ -71,7 +71,7 @@ app.post("/signup", async (req, res) => {
           email: req.body.email,
           account: {
             username: req.body.username,
-            avatar: req.body.avatar,
+            // avatar: req.body.avatar,
           },
           token: token,
           hash: hash,
