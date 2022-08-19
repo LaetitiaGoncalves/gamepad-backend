@@ -93,7 +93,12 @@ app.post("/signup", fileUpload(), async (req, res) => {
 
       await newUser.save();
 
-      res.json(newUser);
+      res.json({
+        email: newUser.email,
+        password: newUser.password,
+        avatar: newUser.avatar,
+        token: newUser.token,
+      });
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
