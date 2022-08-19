@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 //création du model User
 const User = mongoose.model("User", {
   email: String,
-  password: String,
   account: {
     username: String,
     // avatar: Object,
