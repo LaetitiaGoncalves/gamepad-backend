@@ -82,7 +82,6 @@ app.post("/signup", fileUpload(), async (req, res) => {
         const newUser = new User({
           email: req.body.email,
           username: req.body.username,
-          avatar: req.files.avatar,
           token: token,
           hash: hash,
           salt: salt,
@@ -99,13 +98,7 @@ app.post("/signup", fileUpload(), async (req, res) => {
         newUser.avatar = result;
 
         await newUser.save();
-        res.json({
-          _id: newUser._id,
-          email: newUser.email,
-          token: newUser.token,
-          account: newUser.account,
-          avatar: newUser.avatar,
-        });
+        res.json(newUser);
       }
     }
   } catch (error) {
