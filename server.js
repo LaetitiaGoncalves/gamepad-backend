@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 const uid2 = require("uid2");
+const fileUpload = require("express-fileupload");
+const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const app = express();
@@ -16,7 +18,15 @@ app.use(express.json());
 
 const User = require("./models/User");
 
-const key = process.env.API_KEY;
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET,
+});
+
+const convertToBase64 = (file) => {
+  return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
+};
 
 // Homepage avec tous les jeux
 
@@ -56,7 +66,7 @@ app.get("/samegames/:id", async (req, res) => {
 
 // Création d'un user
 
-app.post("/signup", async (req, res) => {
+app.post("/signup", fileUpload(), async (req, res) => {
   try {
     if (req.body.username === undefined) {
       res.status(400).json({ message: "Missing parameters" });
@@ -72,17 +82,29 @@ app.post("/signup", async (req, res) => {
         const newUser = new User({
           email: req.body.email,
           username: req.body.username,
-          // avatar: req.body.avatar,
+          avatar: req.files.avatar,
           token: token,
           hash: hash,
           salt: salt,
         });
+
+        const result = await cloudinary.uploader.upload(
+          convertToBase64(req.files.picture),
+          {
+            folder: "/signup",
+            public_id: `${req.body.username} - ${newUser._id}`,
+          }
+        );
+
+        newUser.avatar = result;
+
         await newUser.save();
         res.json({
           _id: newUser._id,
           email: newUser.email,
           token: newUser.token,
           account: newUser.account,
+          avatar: newUser.avatar,
         });
       }
     }
