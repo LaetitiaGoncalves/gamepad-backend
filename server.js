@@ -141,10 +141,11 @@ app.post("/login", async (req, res) => {
 // creation d'une review
 
 const isAuthenticated = async (req, res, next) => {
-  console.log(req.headers);
+  console.log(req.body.username);
   if (req.headers.authorization) {
     const user = await User.findOne({
       token: req.headers.authorization.replace("Bearer ", ""),
+      username: req.body.username,
     });
 
     if (user) {
