@@ -183,7 +183,12 @@ app.post("/review/publish", isAuthenticated, async (req, res) => {
 app.get("/review", async (req, res) => {
   try {
     const reviews = await Review.find();
-    res.status(200).json(reviews);
+    res.status(200).json({
+      _id: reviews._id,
+      title: reviews.title,
+      description: reviews.description,
+      user: reviews.user,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
