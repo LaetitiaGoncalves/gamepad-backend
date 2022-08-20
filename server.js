@@ -141,11 +141,9 @@ app.post("/login", async (req, res) => {
 // creation d'une review
 
 const isAuthenticated = async (req, res, next) => {
-  console.log(req.body.username);
   if (req.headers.authorization) {
     const user = await User.findOne({
       token: req.headers.authorization.replace("Bearer ", ""),
-      username: req.body.username,
     });
 
     if (user) {
@@ -173,6 +171,7 @@ app.post("/review/publish", isAuthenticated, async (req, res) => {
       _id: review._id,
       title: review.title,
       description: review.description,
+      user: review.user,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
