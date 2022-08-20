@@ -23,6 +23,7 @@ const convertToBase64 = (file) => {
 app.use(express.json());
 
 const User = require("./models/User");
+const Review = require("./models/Review");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -84,6 +85,7 @@ app.post("/signup", fileUpload(), async (req, res) => {
         const newUser = new User({
           email: req.body.email,
           username: req.body.username,
+          avatar: req.body.avatar,
           token: token,
           hash: hash,
           salt: salt,
@@ -97,7 +99,13 @@ app.post("/signup", fileUpload(), async (req, res) => {
         newUser.avatar = resultImage;
         await newUser.save();
 
-        res.json(newUser);
+        res.json({
+          _id: newUser._id,
+          email: newUser.email,
+          avatar: newUser.avatar,
+          token: newUser.token,
+          account: newUser.account,
+        });
       }
     }
   } catch (error) {
@@ -125,6 +133,57 @@ app.post("/login", async (req, res) => {
         res.status(400).json({ message: "Unauthorized" });
       }
     }
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// creation d'une review
+
+const isAuthenticated = async (req, res, next) => {
+  console.log(req.headers);
+  if (req.headers.authorization) {
+    const user = await User.findOne({
+      token: req.headers.authorization.replace("Bearer ", ""),
+    });
+
+    if (user) {
+      req.user = user;
+      next();
+    } else {
+      res.status(401).json({ error: "Token présent mais non valide !" });
+    }
+  } else {
+    res.status(401).json({ error: "Token non envoyé !" });
+  }
+};
+
+app.post("/review/publish", isAuthenticated, async (req, res) => {
+  try {
+    const review = new Review({
+      title: req.body.title,
+      description: req.body.description,
+      user: req.user,
+    });
+
+    await review.save();
+
+    res.json({
+      _id: review._id,
+      title: review.title,
+      description: review.description,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Route afficher les reviews
+
+app.get("/review", async (req, res) => {
+  try {
+    const reviews = await Review.find();
+    res.status(200).json(reviews);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
