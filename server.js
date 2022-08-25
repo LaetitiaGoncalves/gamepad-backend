@@ -36,11 +36,7 @@ cloudinary.config({
 
 app.get("/game", async (req, res) => {
   try {
-    let filters = {};
-
-    filters.name = new RegExp(req.query.name, "i");
-
-    const url = `https://api.rawg.io/api/games?name=${filters}&key=${key}&dates=2022-01-01,2022-12-30`;
+    const url = `https://api.rawg.io/api/games?key=${key}&dates=2022-01-01,2022-12-30`;
     const response = await axios.get(url);
 
     res.status(200).json(response.data.results);
@@ -164,7 +160,7 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
-app.post("/game/:id/review/publish", isAuthenticated, async (req, res) => {
+app.post("/game/:id/review", isAuthenticated, async (req, res) => {
   try {
     const id = req.params.id;
     console.log(id);
