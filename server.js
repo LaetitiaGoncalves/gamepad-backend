@@ -10,6 +10,8 @@ const cloudinary = require("cloudinary").v2;
 require("dotenv").config();
 
 const app = express();
+app.use(express.json());
+
 app.use(cors());
 
 const key = process.env.API_KEY;
@@ -20,10 +22,9 @@ const convertToBase64 = (file) => {
   return `data:${file.mimetype};base64,${file.data.toString("base64")}`;
 };
 
-app.use(express.json());
-
 const User = require("./models/User");
 const Review = require("./models/Review");
+const Favorite = require("./models/Favorite");
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -35,9 +36,14 @@ cloudinary.config({
 
 app.get("/game", async (req, res) => {
   try {
-    const url = `https://api.rawg.io/api/games?key=${key}&dates=2022-01-01,2022-12-30`;
+    let filters = {};
+
+    filters.name = new RegExp(req.query.name, "i");
+
+    const url = `https://api.rawg.io/api/games?name=${filters}&key=${key}&dates=2022-01-01,2022-12-30`;
     const response = await axios.get(url);
-    res.status(200).json(response.data);
+
+    res.status(200).json(response.data.results);
   } catch (error) {
     res.status(400).json("route games not found");
   }
@@ -141,6 +147,7 @@ app.post("/login", async (req, res) => {
 // creation d'une review
 
 const isAuthenticated = async (req, res, next) => {
+  console.log(req.headers.authorization);
   if (req.headers.authorization) {
     const user = await User.findOne({
       token: req.headers.authorization.replace("Bearer ", ""),
@@ -157,22 +164,25 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
-app.post("/review/publish", isAuthenticated, async (req, res) => {
+app.post("/game/:id/review/publish", isAuthenticated, async (req, res) => {
   try {
-    const review = new Review({
-      title: req.body.title,
-      description: req.body.description,
-      user: req.user,
-    });
+    const id = req.params.id;
+    console.log(id);
+    if (id) {
+      const review = new Review({
+        title: req.body.title,
+        description: req.body.description,
+        user: req.user,
+      });
 
-    await review.save();
+      await review.save();
 
-    res.json({
-      _id: review._id,
-      title: review.title,
-      description: review.description,
-      user: review.user,
-    });
+      res.json({
+        title: review.title,
+        description: review.description,
+        user: review.user.username,
+      });
+    }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -183,12 +193,43 @@ app.post("/review/publish", isAuthenticated, async (req, res) => {
 app.get("/review", async (req, res) => {
   try {
     const reviews = await Review.find();
-    res.status(200).json({
-      _id: reviews._id,
-      title: reviews.title,
-      description: reviews.description,
-      user: reviews.user,
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Route ajouter un favoris
+
+app.post("/games/favorite", isAuthenticated, async (req, res) => {
+  try {
+    console.log(req.body);
+    const newFavorite = new Favorite({
+      id: String(req.body.id),
+      name: req.body.name,
+      image: req.body.image,
+      user: req.user,
     });
+    await newFavorite.save();
+
+    res.json({
+      id: newFavorite.id,
+      name: newFavorite.name,
+      image: newFavorite.image,
+      user: newFavorite.user,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Route afficher ses favoris
+
+app.get("/collection", async (req, res) => {
+  try {
+    const newCollection = await Favorite.find();
+    res.status(200).json(newCollection);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
