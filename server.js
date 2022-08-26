@@ -87,16 +87,18 @@ app.post("/signup", fileUpload(), async (req, res) => {
         const newUser = new User({
           email: req.body.email,
           username: req.body.username,
-          avatar: req.body.avatar,
           token: token,
           hash: hash,
           salt: salt,
         });
 
-        const resultImage = await cloudinary.uploader.upload({
-          folder: `api/gamepad/users/${newUser._id}`,
-          public_id: "avatar",
-        });
+        const resultImage = await cloudinary.uploader.upload(
+          convertToBase64(req.files.avatar),
+          {
+            folder: `api/gamepad/users/${newUser._id}`,
+            public_id: "avatar",
+          }
+        );
 
         newUser.avatar = resultImage;
         await newUser.save();
@@ -160,7 +162,7 @@ const isAuthenticated = async (req, res, next) => {
   }
 };
 
-app.post("/game/:id/review", isAuthenticated, async (req, res) => {
+app.post("/game/review/publish/:id", isAuthenticated, async (req, res) => {
   try {
     const id = req.params.id;
     console.log(id);
@@ -168,6 +170,7 @@ app.post("/game/:id/review", isAuthenticated, async (req, res) => {
       const review = new Review({
         title: req.body.title,
         description: req.body.description,
+        gameId: id,
         user: req.user,
       });
 
@@ -177,6 +180,7 @@ app.post("/game/:id/review", isAuthenticated, async (req, res) => {
         title: review.title,
         description: review.description,
         user: review.user.username,
+        gameId: review.id,
       });
     }
   } catch (error) {
@@ -186,9 +190,9 @@ app.post("/game/:id/review", isAuthenticated, async (req, res) => {
 
 // Route afficher les reviews
 
-app.get("/review", async (req, res) => {
+app.get("/review/:id", async (req, res) => {
   try {
-    const reviews = await Review.find();
+    const reviews = await Review.find({ gameId: req.params.id });
 
     res.status(200).json(reviews);
   } catch (error) {
