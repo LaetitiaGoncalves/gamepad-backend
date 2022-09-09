@@ -52,7 +52,6 @@ app.get("/game/:id", async (req, res) => {
     const url = `https://api.rawg.io/api/games/${req.params.id}?key=${key}`;
     const response = await axios.get(url);
     res.status(200).json(response.data);
-    console.log(response.data);
   } catch (error) {
     res.status(400).json("route of the game not found");
   }
@@ -121,22 +120,39 @@ app.post("/signup", fileUpload(), async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const userToCheck = await User.findOne({ email: req.body.email });
-    if (userToCheck === null) {
-      res.status(401).json({ message: "Unauthorized" });
-    } else {
-      const newHash = SHA256(req.body.password + userToCheck.salt).toString(
-        encBase64
-      );
-      if (newHash === userToCheck.hash) {
-        res.json({
+
+    if (userToCheck) {
+      if (
+        SHA256(req.body.password + userToCheck.salt).toString(encBase64) ===
+        userToCheck.hash
+      ) {
+        res.status(200).json({
           _id: userToCheck._id,
           token: userToCheck.token,
           username: userToCheck.username,
         });
       } else {
-        res.status(400).json({ message: "Unauthorized" });
+        res.status(401).json({ error: "Unauthorized" });
       }
+    } else {
+      res.status(400).json({ message: "User not found" });
     }
+    // if (userToCheck === null) {
+    //   res.status(401).json({ message: "Unauthorized" });
+    // } else {
+    //   const newHash = SHA256(req.body.password + userToCheck.salt).toString(
+    //     encBase64
+    //   );
+    //   if (newHash === userToCheck.hash) {
+    //     res.json({
+    //       _id: userToCheck._id,
+    //       token: userToCheck.token,
+    //       username: userToCheck.username,
+    //     });
+    //   } else {
+    //     res.status(400).json({ message: "Unauthorized" });
+    //   }
+    // }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
