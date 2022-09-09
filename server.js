@@ -204,21 +204,25 @@ app.get("/review/:id", async (req, res) => {
 
 app.post("/games/favorite", isAuthenticated, async (req, res) => {
   try {
-    console.log(req.body);
-    const newFavorite = new Favorite({
-      id: String(req.body.id),
-      name: req.body.name,
-      image: req.body.image,
-      user: req.user,
-    });
-    await newFavorite.save();
+    const favoriteToCheck = await Favorite.findById();
+    if (!favoriteToCheck) {
+      const newFavorite = new Favorite({
+        id: String(req.body.id),
+        name: req.body.name,
+        image: req.body.image,
+        user: req.user,
+      });
+      await newFavorite.save();
 
-    res.json({
-      id: newFavorite.id,
-      name: newFavorite.name,
-      image: newFavorite.image,
-      user: newFavorite.user,
-    });
+      res.json({
+        id: newFavorite.id,
+        name: newFavorite.name,
+        image: newFavorite.image,
+        user: newFavorite.user,
+      });
+    } else {
+      res.status(401).json({ message: "Already in favorites" });
+    }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
