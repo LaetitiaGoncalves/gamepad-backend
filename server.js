@@ -195,7 +195,7 @@ app.post("/game/review/publish/:id", isAuthenticated, async (req, res) => {
       res.json({
         title: review.title,
         description: review.description,
-        user: review.user.username,
+        user: review.user,
         gameId: review.id,
       });
     }
