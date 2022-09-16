@@ -208,7 +208,9 @@ app.post("/game/review/publish/:id", isAuthenticated, async (req, res) => {
 
 app.get("/review/:id", async (req, res) => {
   try {
-    const reviews = await Review.find({ gameId: req.params.id });
+    const reviews = await Review.find({
+      gameId: req.params.id,
+    });
 
     res.status(200).json(reviews);
   } catch (error) {
@@ -220,7 +222,7 @@ app.get("/review/:id", async (req, res) => {
 
 app.post("/games/favorite", isAuthenticated, async (req, res) => {
   try {
-    const favoriteToCheck = await Favorite.findById();
+    const favoriteToCheck = await Favorite.findOne({ id: req.body.id });
     if (!favoriteToCheck) {
       const newFavorite = new Favorite({
         id: String(req.body.id),
@@ -250,6 +252,22 @@ app.get("/collection", async (req, res) => {
   try {
     const newCollection = await Favorite.find();
     res.status(200).json(newCollection);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Route profil
+
+app.get("/profil", async (req, res) => {
+  try {
+    const userProfil = await User.findById(req.query.id);
+    res.json({
+      id: userProfil.id,
+      username: userProfil.username,
+      email: userProfil.email,
+      token: userProfil.token,
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
