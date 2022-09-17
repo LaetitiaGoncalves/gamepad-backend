@@ -32,11 +32,11 @@ cloudinary.config({
   api_secret: process.env.API_SECRET,
 });
 
-// Homepage avec tous les jeux
+// Homepage avec les jeux
 
 app.get("/game", async (req, res) => {
   try {
-    const url = `https://api.rawg.io/api/games?key=${key}&dates=2022-01-01,2022-12-30`;
+    const url = `https://api.rawg.io/api/games?key=${key}`;
     const response = await axios.get(url);
 
     res.status(200).json(response.data.results);
@@ -181,7 +181,6 @@ const isAuthenticated = async (req, res, next) => {
 app.post("/game/review/publish/:id", isAuthenticated, async (req, res) => {
   try {
     const id = req.params.id;
-    console.log(id);
     if (id) {
       const review = new Review({
         title: req.body.title,
@@ -198,6 +197,7 @@ app.post("/game/review/publish/:id", isAuthenticated, async (req, res) => {
         user: review.user,
         gameId: review.id,
       });
+      //   console.log(review);
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -210,9 +210,10 @@ app.get("/review/:id", async (req, res) => {
   try {
     const reviews = await Review.find({
       gameId: req.params.id,
-    });
+    }).populate("user");
 
     res.status(200).json(reviews);
+    console.log(reviews);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
