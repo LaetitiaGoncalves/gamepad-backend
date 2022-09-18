@@ -139,22 +139,6 @@ app.post("/login", async (req, res) => {
     } else {
       res.status(400).json({ message: "User not found" });
     }
-    // if (userToCheck === null) {
-    //   res.status(401).json({ message: "Unauthorized" });
-    // } else {
-    //   const newHash = SHA256(req.body.password + userToCheck.salt).toString(
-    //     encBase64
-    //   );
-    //   if (newHash === userToCheck.hash) {
-    //     res.json({
-    //       _id: userToCheck._id,
-    //       token: userToCheck.token,
-    //       username: userToCheck.username,
-    //     });
-    //   } else {
-    //     res.status(400).json({ message: "Unauthorized" });
-    //   }
-    // }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -251,9 +235,9 @@ app.post("/games/favorite", isAuthenticated, async (req, res) => {
 
 // Route afficher ses favoris
 
-app.get("/collection", async (req, res) => {
+app.get("/collection", isAuthenticated, async (req, res) => {
   try {
-    const newCollection = await Favorite.find();
+    const newCollection = await Favorite.find({ user: req.user });
     res.status(200).json(newCollection);
   } catch (error) {
     res.status(400).json({ message: error.message });
