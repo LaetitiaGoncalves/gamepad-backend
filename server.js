@@ -36,9 +36,9 @@ cloudinary.config({
 
 app.get("/game", async (req, res) => {
   const page = req.query.page;
-  const limit = req.query.limit || 50;
+  const search = req.query.search;
   try {
-    const url = `https://api.rawg.io/api/games?key=${key}&limit=${limit}&page=${page}`;
+    const url = `https://api.rawg.io/api/games?key=${key}&page=${page}&search=${search}`;
     const response = await axios.get(url);
 
     res.status(200).json(response.data.results);
