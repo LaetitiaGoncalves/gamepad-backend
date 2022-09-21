@@ -196,7 +196,10 @@ app.get("/review/:id", async (req, res) => {
   try {
     const reviews = await Review.find({
       gameId: req.params.id,
-    }).populate("user");
+    }).populate({
+      path: "user",
+      select: "user.username",
+    });
 
     res.status(200).json(reviews);
     console.log(reviews);
