@@ -198,7 +198,7 @@ app.get("/review/:id", async (req, res) => {
       gameId: req.params.id,
     }).populate({
       path: "user",
-      select: "user.username",
+      select: "username",
     });
 
     res.status(200).json(reviews);
